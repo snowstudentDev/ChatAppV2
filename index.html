@@ -3,61 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real Time Chat App</title>
-    <!--<link rel="stylesheet" href="style.css"> -->
+    <title>Chat Application</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* Dark theme styling */
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        h1, h2 {
+            color: #ffffff;
+            text-align: center;
+            font-style: italic;
+            
+        }
+        button {
+            background-color: #1e88e5;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background-color: #333;
+            color: #ffffff;
+        }
+        input:focus {
+            outline: none;
+            border-color: #1e88e5;
+        }
+        #chat {
+            display: none;
+            margin-top: 20px;
+        }
+        #messages {
+            list-style-type: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        #messages li {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background-color: #1e1e1e;
+        }
+        #usernameDisplay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #ffffff;
+        }
+        :root {
+            --primColor: #dcdcdc;
+            --secoColor: white;
+            --cornerRad: 4px;
+          }
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 20px;
+          }
+          details {
+            margin: -20px;
+          }
+          summary {
+            writing-mode: vertical-lr;
+            text-align: center;
+            scale: 1.9;
+            padding: 12px 10px;
+            width: 23px;
+            height: 17px;
+            border-radius: var(--cornerRad);
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            outline: none;
+            transition: transform 200ms ease-in-out 0s;
+          }
+          summary::before,
+          summary::after {
+            position: static;
+            top: 0;
+            left: 0;
+          }
+          summary::before {
+            content: "";
+          }
+          summary::after {
+            content: "III";
+            letter-spacing: -1px;
+          }
+          summary:hover {
+            transform: scale(1.2);
+          }
+          summary::marker {
+            font-size: 0;
+          }
+          summary::-webkit-details-marker {
+            display: none;
+          }
+          details[open] .menu {
+            animation-name: menuAnim;
+          }
+          details[open] summary::before {
+            content: "X";
+          }
+          details[open] summary::after {
+            content: "";
+          }
+          .menu {
+            height: 0;
+            width: fit-content;
+            border-radius: 10px;
+            background-color:#333;
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.2);
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            animation: closeMenu 300ms ease-in-out forwards;
+          }
+          .menu a {
+            padding: 12px 24px;
+            margin: 0 16px;
+            color: var(--secoColor);
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            text-align: center;
+            transition: filter 200ms linear 0s;
+          }
+          .menu a:hover {
+            filter: brightness(200%);
+            color: #007BFF; /* Change this to your desired hover color */
+          }
+          .menu a:nth-of-type(1) {
+            padding-top: 24px;
+          }
+          .menu a:nth-last-of-type(1) {
+            border-bottom: none;
+          }
+          .menu a:hover {
+            filter: brightness(200%);
+          }
+
+          details[open]::before {
+            animation: fadeMe 300ms linear forwards;
+          }
+          @keyframes menuAnim {
+            0% {
+              height: 0;
+            }
+            100% {
+              height: 312px;
+            }
+          }
+          @keyframes fadeMe {
+            0% {
+              opacity: 0.4;
+            }
+            100% {
+              opacity: 0;
+            }
+          }
+          
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="logo">Chat Room</h1>
-        <form class="form" id="form">
-            <input class="input" type="text" placeholder="Name" id="myname">
-            <input class="input" type="text" placeholder="Messages" id="message">
-            <button class="button">Send Message</button>
-        </form>
-        <!--Msg container-->
-        <div class="messageArea" id="messageArea"></div>
-
-
-        <!--              Simple Scripts                   -->
-        <script src="/socket.io/socket.io.js"></script>
-        <script>
-            let socket = io();
-            let form = document.getElementById('form');
-            let myName = document.getElementById('myname');
-            let message = document.getElementById('message');
-            let MsgArea = document.getElementById('messageArea')
-
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-
-                if(message.value) {
-                    socket.emit('send name', myName.value);
-                    socket.emit('send message', message.value);
-                    message.value = '';
-                     
-                }
-            });
-
-            socket.on('send name', (username) => {
-                let name = document.createElement('p');
-                name.classList.add('message');
-                name.innerHTML = `<span class="username">${username} :</span>`;
-                MsgArea.appendChild(name);
-            });
-
-            socket.on('send message', (chat) => {
-                let chatContent = document.createElement('p');
-                chatContent.classList.add('message'); 
-                chatContent.textContent = chat;
-                MsgArea.appendChild(chatContent);
-
-            });
-
-        </script>
+    
+    <details>
+        <summary></summary>
+        <nav class="menu">
+          <a href="#link">Chat Room</a>
+          <a href="#link">Private Messages</a>
+          <a href="#link">Group Chats</a>
+          <a href="#link">Contancts</a>
+          <a href="#link">Report</a>
 
 
 
+
+
+        </nav>
+      </details>
+    <h1>SnowChats</h1>
+    <div id="usernameDisplay"></div> <!-- Display for the username -->
+    <div id="auth">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button id="loginBtn">Login</button>
+        <button id="signupBtn">Sign Up</button>
     </div>
+    <div id="chat" style="display: none;">
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Type a message...">
+        <button id="sendBtn">Send</button>
+    </div>
+
+
+    <script>
+        const socket = io();
+        let currentUsername = ''; // Variable to store the current username
+
+        // Check if the user is logged in
+        async function checkLoginStatus() {
+            const response = await fetch('/check-login', {
+                method: 'GET',
+                credentials: 'include' // Include cookies in the request
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.loggedIn) {
+                    document.getElementById('auth').style.display = 'none';
+                    document.getElementById('chat').style.display = 'block';
+                    currentUsername = data.username; // Store the username
+                    document.getElementById('usernameDisplay').textContent = `Logged in as: ${currentUsername}`; // Display username
+                }
+            }
+        }
+
+        // Call the function to check login status on page load
+        checkLoginStatus();
+
+        document.getElementById('loginBtn').onclick = async () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password }),
+                credentials: 'include' // Include cookies in the request
+            });
+
+            if (response.ok) {
+ const data = await response.json();
+                document.getElementById('auth').style.display = 'none';
+                document.getElementById('chat').style.display = 'block';
+                currentUsername = data.username; // Update the current username
+                document.getElementById('usernameDisplay').textContent = `Logged in as: ${currentUsername}`; // Display username
+                console.log(data.message);
+            } else {
+                alert('Login failed');
+            }
+        };
+
+        document.getElementById('signupBtn').onclick = async () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (response.ok) {
+                alert('Signup successful, you can now log in.');
+            } else {
+                alert('Signup failed');
+            }
+        };
+
+        document.getElementById('sendBtn').onclick = () => {
+            const msg = document.getElementById('messageInput').value;
+            if (msg) {
+                socket.emit('chat message', { username: currentUsername, message: msg }); // Include username in the message
+                document.getElementById('messageInput').value = ''; // Clear the input field
+            }
+        };
+
+        socket.on('chat message', (data) => {
+            const messages = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.textContent = `${data.username}: ${data.message}`; // Display username with the message
+            messages.appendChild(messageElement);
+            messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
+        });
+    </script>
 </body>
 </html>
